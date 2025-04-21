@@ -1,76 +1,79 @@
-import { useState } from 'react'
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 
-function ExpenseForm({ onAddExpense }) {
-  const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    category: 'Food',
-    date: new Date().toISOString().split('T')[0]
-  })
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-  }
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!formData.description || !formData.amount) return
-    
-    onAddExpense({
-      ...formData,
-      amount: parseFloat(formData.amount),
-      date: formData.date || new Date().toISOString().split('T')[0]
-    })
-    
-    setFormData({
+const ExpenseForm = ({ onAddExpense }) => {
+  const formik = useFormik({
+    initialValues: {
       description: '',
       amount: '',
       category: 'Food',
       date: new Date().toISOString().split('T')[0]
-    })
-  }
+    },
+    validationSchema: Yup.object({
+      description: Yup.string().required('Required'),
+      amount: Yup.number()
+        .min(0.01, 'Must be at least $0.01')
+        .required('Required'),
+      date: Yup.date().required('Required')
+    }),
+    onSubmit: (values, { resetForm }) => {
+      onAddExpense({
+        ...values,
+        amount: parseFloat(values.amount),
+        id: Date.now() // Unique ID
+      });
+      resetForm();
+    }
+  });
 
   return (
-    <form onSubmit={handleSubmit} className="expense-form">
-      <input
-        type="text"
-        name="description"
-        placeholder="Description"
-        value={formData.description}
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="number"
-        name="amount"
-        placeholder="Amount"
-        value={formData.amount}
-        onChange={handleChange}
-        min="0.01"
-        step="0.01"
-        required
-      />
+    <form onSubmit={formik.handleSubmit} className="expense-form">
+      <div>
+        <input
+          name="description"
+          placeholder="Description"
+          onChange={formik.handleChange}
+          value={formik.values.description}
+        />
+        {formik.touched.description && formik.errors.description ? (
+          <div className="error">{formik.errors.description}</div>
+        ) : null}
+      </div>
+
+      <div>
+        <input
+          name="amount"
+          type="number"
+          placeholder="Amount"
+          onChange={formik.handleChange}
+          value={formik.values.amount}
+          step="0.01"
+          min="0.01"
+        />
+        {formik.touched.amount && formik.errors.amount ? (
+          <div className="error">{formik.errors.amount}</div>
+        ) : null}
+      </div>
+
       <select
         name="category"
-        value={formData.category}
-        onChange={handleChange}
+        onChange={formik.handleChange}
+        value={formik.values.category}
       >
         <option value="Food">Food</option>
         <option value="Transport">Transport</option>
         <option value="Entertainment">Entertainment</option>
-        <option value="Utilities">Utilities</option>
-        <option value="Other">Other</option>
       </select>
+
       <input
         type="date"
         name="date"
-        value={formData.date}
-        onChange={handleChange}
+        onChange={formik.handleChange}
+        value={formik.values.date}
       />
+
       <button type="submit">Add Expense</button>
     </form>
-  )
-}
-
-export default ExpenseForm
+  );
+};
+export default ExpenseForm;  

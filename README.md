@@ -14,6 +14,8 @@ A React application for tracking personal expenses with filtering, sorting, and 
 - React (Vite)
 - JavaScript (ES6+)
 - CSS3
+- Formik (for form handling)
+- Yup (for form validation)
 - Git/GitHub
 
 ## Installation
